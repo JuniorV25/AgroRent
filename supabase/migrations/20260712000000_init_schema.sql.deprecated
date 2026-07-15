@@ -1,0 +1,112 @@
+-- ============================================================================
+-- AgroRent · TractorLink — Esquema inicial de Supabase
+-- Deriva de los tipos de dominio en src/modules/*/types.ts
+-- Orden de creación respeta las referencias (providers -> users -> machines
+-- -> fields -> reservations).
+-- ============================================================================
+
+-- Proveedores (modules/providers)
+create table if not exists providers (
+  id                uuid primary key default gen_random_uuid(),
+  company_name      text not null,
+  ruc               varchar(11) not null unique,
+  verified          boolean default false,
+  district          text not null,
+  rating            numeric(2,1) default 0,
+  fleet_size        int default 0,
+  response_time_hrs int default 0
+);
+
+-- Usuarios (modules/users)
+create table if not exists users (
+  id          uuid primary key default gen_random_uuid(),
+  name        text not null,
+  email       text not null unique,
+  role        text not null check (role in ('cliente','proveedor')),
+  company     text,
+  ruc         varchar(11),
+  verified    boolean default false,
+  provider_id uuid references providers(id) on delete set null
+);
+
+-- Maquinaria / flota (modules/machinery)
+create table if not exists machines (
+  id                uuid primary key default gen_random_uuid(),
+  provider_id       uuid references providers(id) on delete cascade,
+  brand             text not null,
+  model             text not null,
+  year              int,
+  horsepower        int not null,
+  implement         text not null,
+  district          text not null,
+  price_per_day     numeric(10,2) not null,
+  price_per_hectare numeric(10,2) not null,
+  status            text not null default 'operativo'
+                    check (status in ('operativo','mantenimiento','fuera_servicio')),
+  image_url         text,
+  rating            numeric(2,1) default 0,
+  total_jobs        int default 0,
+  telemetry         jsonb default '{}'::jsonb,  -- horómetro, combustible, alertas…
+  specs             jsonb default '{}'::jsonb,
+  created_at        timestamptz default now()
+);
+
+-- Campos del cliente (modules/fields)
+create table if not exists fields (
+  id         uuid primary key default gen_random_uuid(),
+  owner_id   uuid references users(id) on delete cascade,
+  name       text not null,
+  district   text not null,
+  hectares   numeric(8,2) not null,
+  crop       text not null,
+  soil_type  text,
+  created_at timestamptz default now()
+);
+
+-- Reservas (modules/rentals)
+create table if not exists reservations (
+  id                 uuid primary key default gen_random_uuid(),
+  machine_id         uuid references machines(id),
+  field_id           uuid references fields(id),
+  client_id          uuid references users(id),
+  provider_id        uuid references providers(id),
+  days               int not null,
+  hectares           numeric(8,2) not null,
+  estimated_cost     numeric(12,2) not null,
+  contract_accepted  boolean default false,
+  status             text default 'borrador'
+                     check (status in ('borrador','confirmada','en_curso','finalizada','cancelada')),
+  created_at         timestamptz default now(),
+  updated_at         timestamptz default now()
+);
+
+-- Chat B2B por reserva (modules/rentals)
+create table if not exists chat_messages (
+  id             uuid primary key default gen_random_uuid(),
+  reservation_id uuid references reservations(id) on delete cascade,
+  sender         text not null check (sender in ('cliente','proveedor','ia')),
+  text           text not null,
+  created_at     timestamptz default now()
+);
+
+-- Notificaciones in-app (modules/notifications)
+create table if not exists notifications (
+  id             uuid primary key default gen_random_uuid(),
+  for_user_id    uuid references users(id) on delete cascade,
+  type           text not null check (type in ('reserva','alerta','sistema')),
+  title          text not null,
+  message        text not null,
+  reservation_id uuid references reservations(id),
+  read           boolean default false,
+  created_at     timestamptz default now()
+);
+
+-- Métricas mensuales por proveedor (modules/metrics)
+create table if not exists monthly_metrics (
+  id          uuid primary key default gen_random_uuid(),
+  provider_id uuid references providers(id) on delete cascade,
+  month       text not null,
+  revenue     numeric(12,2) default 0,
+  jobs        int default 0,
+  utilization numeric(5,2) default 0
+);

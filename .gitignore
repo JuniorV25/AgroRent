@@ -1,0 +1,21 @@
+node_modules
+dist
+dist-ssr
+*.local
+.DS_Store
+
+# Variables de entorno reales (nunca subir claves)
+.env
+.env.*
+!.env.example
+
+# Credenciales de demo / notas internas — no deben publicarse en GitHub
+CREDENCIALES_DEMO.md
+
+# Configuración local de Claude Code / MCP (puede contener project_ref u otros
+# identificadores de infraestructura que no deben ser públicos)
+.claude/
+supabase/.claude/
+supabase/.mcp.json
+tsconfig.tsbuildinfo
+vite.config.ts.timestamp-*
