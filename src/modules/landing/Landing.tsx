@@ -41,7 +41,7 @@ export default function Landing() {
           <div className="flex items-center gap-2.5">
             <Logo />
             <p className="font-display font-extrabold text-slate-800 tracking-tight text-lg">
-              Agro<span className="text-agua-500">Rent</span>
+              Traktor<span className="text-agua-500">Rent</span>
             </p>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2">
@@ -73,7 +73,7 @@ export default function Landing() {
         <div className="mx-auto max-w-6xl px-5 pt-28 sm:pt-32 lg:pt-36 pb-20 sm:pb-28 lg:pb-36 relative z-10">
           <div className="max-w-2xl lg:max-w-xl mx-auto lg:mx-0 text-center lg:text-left">
             <Badge tone="agua" className="mx-auto lg:mx-0 animate-fade-in-up">
-              <Sparkles size={13} /> +40 unidades disponibles hoy en La Libertad
+              <Sparkles size={13} /> +40 unidades disponibles hoy en La Libertad y Lambayeque
             </Badge>
             <h1 className="mt-5 font-display font-black text-4xl sm:text-6xl leading-[1.05] text-slate-900 animate-fade-in-up">
               La flota agrícola de tu campo,
@@ -136,7 +136,7 @@ export default function Landing() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
               { k: "40+", v: "Unidades activas" },
-              { k: "4", v: "Distritos cubiertos" },
+              { k: "2", v: "Regiones cubiertas" },
               { k: "98%", v: "Reservas cumplidas" },
               { k: "<2h", v: "Tiempo de respuesta" },
             ].map((x, i) => (
@@ -154,7 +154,7 @@ export default function Landing() {
       </section>
 
       <footer className="border-t border-slate-100 py-8 text-center text-sm text-slate-400 bg-[#fbfaf7]">
-        AgroRent — Marketplace B2B · Moche · Virú · Laredo · Salaverry
+        TraktorRent — Marketplace B2B · La Libertad · Lambayeque
       </footer>
     </div>
   );
@@ -281,7 +281,7 @@ function ComoFunciona() {
 }
 
 // ============================================================================
-// Origen — historia de AgroRent, capa oscura de contraste
+// Origen — historia de TraktorRent, capa oscura de contraste
 // ============================================================================
 function Origen() {
   return (
@@ -304,16 +304,16 @@ function Origen() {
               De un problema operativo a una plataforma B2B
             </h2>
             <p className="mt-4 text-slate-300 leading-relaxed max-w-3xl">
-              AgroRent nace en 2026 en La Libertad, Perú, tras identificar que clientes y proveedores de
-              tractores agrícolas dependían de contactos informales y opciones limitadas. Centralizamos ese
-              proceso en una sola plataforma digital.
+              TraktorRent nace en 2026 en La Libertad, Perú, tras identificar que clientes y proveedores de
+              tractores agrícolas dependían de contactos informales y opciones limitadas. Hoy centralizamos ese
+              proceso en una sola plataforma digital, con cobertura en La Libertad y Lambayeque.
             </p>
 
             <div className="mt-6 flex flex-wrap gap-x-8 gap-y-3">
               {[
                 { k: "2026", v: "Año de fundación" },
+                { k: "2", v: "Regiones con cobertura" },
                 { k: "La Libertad", v: "Región de origen" },
-                { k: "4", v: "Distritos activos" },
               ].map((x) => (
                 <div key={x.v}>
                   <p className="font-display font-black text-xl text-agua-300">{x.k}</p>

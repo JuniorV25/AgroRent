@@ -1,21 +1,21 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   LayoutDashboard, Search, Sprout, Plus, Trash2, MapPin, SlidersHorizontal, Calculator, X,
-  ClipboardList, ShieldCheck, CheckCircle2, Wrench, Scale,
+  ClipboardList, ShieldCheck, CheckCircle2, Wrench, Scale, Trophy,
 } from "lucide-react";
 import { useStore, selectReservationsByClient, MAX_COMPARE } from "../../../store/useStore";
 import type { Machine, ServiceMode, ImplementType } from "../../machinery/types";
 import type { Field as FieldT } from "../../fields/types";
 import { BRANDS } from "../../machinery/data";
 import { CROPS } from "../../fields/data";
-import { DISTRICTS } from "../../../core/constants/districts";
+import { REGIONS, regionOfDistrict, type Region } from "../../../core/constants/districts";
 import { CONTRACT_CLAUSES } from "../../rentals/data";
 import { statusMeta } from "../../machinery/status";
 import { reservationStatusMeta } from "../../rentals/status";
 import { estimateCost } from "../../rentals/pricing";
 import { soles, uid } from "../../../core/utils/format";
 import DashboardShell, { NavItem } from "../layout/DashboardShell";
-import { Card, Button, Badge, Field, inputCls, Modal, Pagination } from "../../../core/ui";
+import { Card, Button, Badge, Field, inputCls, Modal, Pagination, DistrictOptions } from "../../../core/ui";
 import MachineCard from "../../machinery/components/MachineCard";
 import ChatWidget from "../../rentals/components/ChatWidget";
 import { ProviderPanel, ProviderChip } from "../../providers/components/ProviderInfo";
@@ -62,12 +62,12 @@ function Resumen({ onGo }: { onGo: (t: string) => void }) {
 
   return (
     <div className="stagger space-y-6">
-      <Header title="Panel del Cliente" sub={`AgroRent · ${company}`} />
+      <Header title="Panel del Cliente" sub={`TraktorRent · ${company}`} />
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Stat k={String(fields.length)} v="Campos registrados" />
         <Stat k={`${totalHa} ha`} v="Superficie total" />
         <Stat k={String(disponibles)} v="Máquinas disponibles" />
-        <Stat k="4" v="Distritos con cobertura" />
+        <Stat k="2" v="Regiones con cobertura" />
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
@@ -107,6 +107,7 @@ function Buscar() {
   const machines = useStore((s) => s.machines);
   const [q, setQ] = useState("");
   const [brand, setBrand] = useState("Todas");
+  const [region, setRegion] = useState<Region | "Todas">("Todas");
   const [district, setDistrict] = useState("Todos");
   const [maxPrice, setMaxPrice] = useState(400);
   const [minHp, setMinHp] = useState(0);
@@ -114,19 +115,27 @@ function Buscar() {
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 15;
 
+  // Al cambiar de región, el distrito elegido puede quedar fuera de esa
+  // región: se reinicia a "Todos" para no filtrar por error a 0 resultados.
+  const onRegionChange = (r: Region | "Todas") => {
+    setRegion(r);
+    setDistrict("Todos");
+  };
+
   const results = useMemo(() => machines.filter((m) =>
     (brand === "Todas" || m.brand === brand) &&
+    (region === "Todas" || regionOfDistrict(m.district) === region) &&
     (district === "Todos" || m.district === district) &&
     (m.pricePerHourSeca ?? 0) <= maxPrice && m.horsepower >= minHp &&
     (q === "" || `${m.brand} ${m.model} ${(m.implements ?? []).map((i) => i.type).join(" ")}`.toLowerCase().includes(q.toLowerCase()))
-  ), [machines, brand, district, maxPrice, minHp, q]);
+  ), [machines, brand, region, district, maxPrice, minHp, q]);
 
   const totalPages = Math.max(1, Math.ceil(results.length / PAGE_SIZE));
   const pageSafe = Math.min(page, totalPages);
   const paged = results.slice((pageSafe - 1) * PAGE_SIZE, pageSafe * PAGE_SIZE);
 
   // Reinicia a la página 1 cada vez que cambian los filtros de búsqueda
-  useEffect(() => setPage(1), [q, brand, district, maxPrice, minHp]);
+  useEffect(() => setPage(1), [q, brand, region, district, maxPrice, minHp]);
 
   return (
     <div className="space-y-6">
@@ -143,8 +152,15 @@ function Buscar() {
           <select className={inputCls} value={brand} onChange={(e) => setBrand(e.target.value)}>
             <option>Todas</option>{BRANDS.map((b) => <option key={b}>{b}</option>)}
           </select>
+          <select className={inputCls} value={region} onChange={(e) => onRegionChange(e.target.value as Region | "Todas")}>
+            <option value="Todas">Todas las regiones</option>
+            {REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}
+          </select>
+        </div>
+        <div className="mt-3">
           <select className={inputCls} value={district} onChange={(e) => setDistrict(e.target.value)}>
-            <option>Todos</option>{DISTRICTS.map((d) => <option key={d}>{d}</option>)}
+            <option value="Todos">Todos los distritos{region !== "Todas" ? ` de ${region}` : ""}</option>
+            <DistrictOptions region={region === "Todas" ? undefined : region} />
           </select>
         </div>
         <div className="grid sm:grid-cols-2 gap-6 mt-4">
@@ -209,6 +225,39 @@ function Comparar({ onGo }: { onGo: (t: string) => void }) {
   const bestOperada = bestId((m) => m.pricePerHourOperada ?? 0, "min");
   const bestHp = bestId((m) => m.horsepower, "max");
   const bestRating = bestId((m) => m.rating, "max");
+
+  // "Mejor opción" general: normaliza precio (menor = mejor), potencia y
+  // valoración (mayor = mejor) entre 0 y 1 y combina con pesos, para elegir
+  // un ganador aunque ninguna unidad lidere en todos los indicadores.
+  const range = (vals: number[]) => {
+    const min = Math.min(...vals), max = Math.max(...vals);
+    return { min, max, span: max - min || 1 };
+  };
+  const priceOf = (m: Machine) => ((m.pricePerHourSeca ?? 0) + (m.pricePerHourOperada ?? 0)) / 2;
+  const priceRange = range(selected.map(priceOf));
+  const hpRange = range(selected.map((m) => m.horsepower));
+  const ratingRange = range(selected.map((m) => m.rating));
+  const overallScore = (m: Machine) => {
+    const priceScore = 1 - (priceOf(m) - priceRange.min) / priceRange.span;
+    const hpScore = (m.horsepower - hpRange.min) / hpRange.span;
+    const ratingScore = (m.rating - ratingRange.min) / ratingRange.span;
+    return priceScore * 0.4 + hpScore * 0.3 + ratingScore * 0.3;
+  };
+  const winner = selected.length > 0
+    ? selected.reduce((best, m) => (overallScore(m) > overallScore(best) ? m : best), selected[0])
+    : null;
+  const winnerReasons: string[] = [];
+  if (winner) {
+    if (winner.id === bestSeca) winnerReasons.push("el precio más bajo en máquina seca");
+    if (winner.id === bestOperada) winnerReasons.push("el precio más bajo en máquina operada");
+    if (winner.id === bestHp) winnerReasons.push("la mayor potencia");
+    if (winner.id === bestRating) winnerReasons.push("la mejor valoración");
+  }
+  const winnerReasonText = winnerReasons.length === 0
+    ? "Ofrece el mejor equilibrio general entre precio, potencia y valoración, aunque otra unidad lidere en algún indicador puntual."
+    : winnerReasons.length === 1
+    ? `Tiene ${winnerReasons[0]} entre las unidades comparadas.`
+    : `Tiene ${winnerReasons.slice(0, -1).join(", ")} y ${winnerReasons[winnerReasons.length - 1]} entre las unidades comparadas.`;
 
   return (
     <div className="stagger space-y-6">
@@ -306,13 +355,35 @@ function Comparar({ onGo }: { onGo: (t: string) => void }) {
             <p className="text-[11px] text-slate-400 mt-3 flex items-center gap-1"><CheckCircle2 size={12} className="text-agua-500" /> Resaltado en verde: el mejor valor de cada indicador entre las unidades elegidas.</p>
           </Card>
 
-          {/* Gráficos comparativos tipo dashboard */}
+          {/* Gráficos comparativos tipo dashboard: 2 circulares + 2 de barras */}
           <div className="grid md:grid-cols-2 gap-6">
-            <CompareChart title="Precio por hora · máquina seca (S/)" data={selected.map((m, i) => ({ label: `${m.brand} ${m.model}`, value: m.pricePerHourSeca, color: COMPARE_COLORS[i] }))} />
+            <CompareDonut title="Precio por hora · máquina seca (S/)" data={selected.map((m, i) => ({ label: `${m.brand} ${m.model}`, value: m.pricePerHourSeca, color: COMPARE_COLORS[i] }))} />
+            <CompareDonut title="Potencia (HP)" data={selected.map((m, i) => ({ label: `${m.brand} ${m.model}`, value: m.horsepower, color: COMPARE_COLORS[i] }))} />
             <CompareChart title="Precio por hora · máquina operada (S/)" data={selected.map((m, i) => ({ label: `${m.brand} ${m.model}`, value: m.pricePerHourOperada, color: COMPARE_COLORS[i] }))} />
-            <CompareChart title="Potencia (HP)" data={selected.map((m, i) => ({ label: `${m.brand} ${m.model}`, value: m.horsepower, color: COMPARE_COLORS[i] }))} />
             <CompareChart title="Valoración (sobre 5)" data={selected.map((m, i) => ({ label: `${m.brand} ${m.model}`, value: m.rating, color: COMPARE_COLORS[i] }))} max={5} />
           </div>
+
+          {/* Recomendación: mejor opción entre las unidades comparadas */}
+          {winner && (
+            <Card className="p-6 bg-gradient-to-br from-agua-50/80 to-white">
+              <div className="flex items-start gap-3.5">
+                <div className="w-11 h-11 shrink-0 rounded-xl bg-agua-500 text-white grid place-items-center shadow-glow">
+                  <Trophy size={20} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold text-agua-600 uppercase tracking-wide">Mejor opción</p>
+                  <h4 className="font-display font-black text-lg text-slate-800">{winner.brand} {winner.model}</h4>
+                  <p className="text-sm text-slate-500 mt-1">{winnerReasonText}</p>
+                  <div className="flex flex-wrap gap-1.5 mt-3">
+                    {winner.id === bestSeca && <Badge tone="agua">Precio más bajo · seca</Badge>}
+                    {winner.id === bestOperada && <Badge tone="agua">Precio más bajo · operada</Badge>}
+                    {winner.id === bestHp && <Badge tone="earth">Mayor potencia</Badge>}
+                    {winner.id === bestRating && <Badge tone="amber">Mejor valorada</Badge>}
+                  </div>
+                </div>
+              </div>
+            </Card>
+          )}
         </>
       )}
     </div>
@@ -329,6 +400,39 @@ function CompareRow({ label, cells, highlight }: { label: string; cells: ReactNo
         </td>
       ))}
     </tr>
+  );
+}
+
+function CompareDonut({ title, data }: { title: string; data: { label: string; value: number; color: string }[] }) {
+  const total = data.reduce((a, d) => a + d.value, 0) || 1;
+  let acc = 0;
+  const stops = data.map((d) => {
+    const start = (acc / total) * 100;
+    acc += d.value;
+    const end = (acc / total) * 100;
+    return `${d.color} ${start}% ${end}%`;
+  }).join(", ");
+
+  return (
+    <Card className="p-5">
+      <h4 className="font-display font-bold text-slate-800 text-sm mb-4">{title}</h4>
+      <div className="flex items-center gap-5">
+        <div className="w-28 h-28 rounded-full shrink-0 grid place-items-center" style={{ background: `conic-gradient(${stops})` }}>
+          <div className="w-16 h-16 rounded-full bg-white grid place-items-center text-center">
+            <span className="text-[10px] font-semibold text-slate-400 leading-tight">Total<br />{Number.isInteger(total) ? total : total.toFixed(1)}</span>
+          </div>
+        </div>
+        <div className="flex-1 min-w-0 space-y-1.5">
+          {data.map((d) => (
+            <div key={d.label} className="flex items-center gap-2 text-xs">
+              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: d.color }} />
+              <span className="flex-1 min-w-0 truncate text-slate-600 font-medium">{d.label}</span>
+              <span className="font-semibold text-slate-700 shrink-0">{Math.round((d.value / total) * 100)}%</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Card>
   );
 }
 
@@ -683,7 +787,7 @@ function Campos() {
           <Field label="Nombre del campo"><input className={inputCls} value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="Ej. Fundo Santa Rosa" /></Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Distrito">
-              <select className={inputCls} value={form.district} onChange={(e) => set("district", e.target.value)}>{DISTRICTS.map((d) => <option key={d}>{d}</option>)}</select>
+              <select className={inputCls} value={form.district} onChange={(e) => set("district", e.target.value)}><DistrictOptions /></select>
             </Field>
             <Field label="Hectáreas"><input type="number" className={inputCls} value={form.hectares} onChange={(e) => set("hectares", +e.target.value)} /></Field>
           </div>

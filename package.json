@@ -1,9 +1,9 @@
 {
-  "name": "agrorent-tractorlink",
+  "name": "traktorrent",
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Marketplace B2B de alquiler de maquinaria agrícola — AgroRent (cliente) / TractorLink (proveedor)",
+  "description": "TraktorRent — Marketplace B2B de alquiler de maquinaria agrícola en La Libertad y Lambayeque, Perú",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

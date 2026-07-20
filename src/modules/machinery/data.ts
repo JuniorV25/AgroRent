@@ -95,69 +95,32 @@ type RawMachineSeed = Omit<Machine, "implements" | "pricePerHourSeca" | "pricePe
 };
 
 const RAW_MACHINES: RawMachineSeed[] = [
+  // --- prov-4 · Salaverry AgroServicios (cuenta demo proveedor@gmail.com) —
+  // flota reemplazada con fotos reales de Wikimedia (las 8 unidades de prueba
+  // originales usaban ilustraciones SVG genéricas y fueron retiradas). ---
   {
-    id: "mac-1", providerId: "prov-1", brand: "John Deere", model: "6110M", year: 2022,
-    horsepower: 110, implement: "Arado de discos", district: "Virú",
-    pricePerDay: 850, pricePerHectare: 190, status: "operativo",
-    imageUrl: BRAND_IMG["John Deere"], rating: 4.9, totalJobs: 214,
-    telemetry: { hourmeter: 3120, fuelLevel: 78, engineTemp: 89, nextServiceInHours: 80, activeAlerts: [] },
-    specs: { transmission: "PowrQuad Plus 20/20", fuelTank: 250, weight: 4800, tractionType: "4WD" },
-  },
-  {
-    id: "mac-2", providerId: "prov-1", brand: "New Holland", model: "T7.245", year: 2021,
-    horsepower: 245, implement: "Subsolador", district: "Virú",
-    pricePerDay: 1650, pricePerHectare: 260, status: "operativo",
-    imageUrl: BRAND_IMG["New Holland"], rating: 4.7, totalJobs: 168,
-    telemetry: { hourmeter: 5240, fuelLevel: 41, engineTemp: 93, nextServiceInHours: 22, activeAlerts: ["Filtro de aire al 70%"] },
-    specs: { transmission: "Auto Command CVT", fuelTank: 470, weight: 7200, tractionType: "4WD" },
-  },
-  {
-    id: "mac-3", providerId: "prov-2", brand: "Massey Ferguson", model: "MF 4707", year: 2020,
-    horsepower: 75, implement: "Fumigadora", district: "Moche",
-    pricePerDay: 560, pricePerHectare: 120, status: "mantenimiento",
-    imageUrl: BRAND_IMG["Massey Ferguson"], rating: 4.4, totalJobs: 302,
-    telemetry: { hourmeter: 6890, fuelLevel: 15, engineTemp: 78, nextServiceInHours: 6, activeAlerts: ["Cambio de aceite pendiente", "Nivel de combustible bajo"] },
-    specs: { transmission: "8x8 Sincronizada", fuelTank: 110, weight: 2900, tractionType: "4WD" },
-  },
-  {
-    id: "mac-4", providerId: "prov-2", brand: "Kubota", model: "M7-172", year: 2023,
-    horsepower: 172, implement: "Sembradora", district: "Moche",
-    pricePerDay: 1280, pricePerHectare: 210, status: "operativo",
-    imageUrl: BRAND_IMG["Kubota"], rating: 4.8, totalJobs: 97,
-    telemetry: { hourmeter: 1450, fuelLevel: 92, engineTemp: 85, nextServiceInHours: 150, activeAlerts: [] },
-    specs: { transmission: "K-VT Continua", fuelTank: 330, weight: 6100, tractionType: "4WD" },
-  },
-  {
-    id: "mac-5", providerId: "prov-3", brand: "John Deere", model: "S770", year: 2019,
-    horsepower: 473, implement: "Cosechadora", district: "Laredo",
-    pricePerDay: 3200, pricePerHectare: 340, status: "operativo",
-    imageUrl: BRAND_IMG["John Deere"], rating: 4.6, totalJobs: 143,
-    telemetry: { hourmeter: 4110, fuelLevel: 63, engineTemp: 96, nextServiceInHours: 45, activeAlerts: ["Presión hidráulica variable"] },
-    specs: { transmission: "ProDrive 40 km/h", fuelTank: 1250, weight: 15800, tractionType: "2WD" },
-  },
-  {
-    id: "mac-6", providerId: "prov-4", brand: "New Holland", model: "TD5.90", year: 2022,
+    id: "mac-59", providerId: "prov-4", brand: "New Holland", model: "TD5.90", year: 2022,
     horsepower: 90, implement: "Rastra", district: "Salaverry",
     pricePerDay: 690, pricePerHectare: 145, status: "operativo",
-    imageUrl: BRAND_IMG["New Holland"], rating: 4.5, totalJobs: 188,
+    imageUrl: REAL_PHOTO.nhUtility, rating: 4.5, totalJobs: 188,
     telemetry: { hourmeter: 2760, fuelLevel: 55, engineTemp: 87, nextServiceInHours: 95, activeAlerts: [] },
     specs: { transmission: "Synchro Shuttle 12x12", fuelTank: 130, weight: 3400, tractionType: "4WD" },
   },
   {
-    id: "mac-7", providerId: "prov-4", brand: "Massey Ferguson", model: "MF 7724", year: 2021,
-    horsepower: 240, implement: "Cargador frontal", district: "Salaverry",
-    pricePerDay: 1580, pricePerHectare: 250, status: "fuera_servicio",
-    imageUrl: BRAND_IMG["Massey Ferguson"], rating: 4.3, totalJobs: 121,
-    telemetry: { hourmeter: 8320, fuelLevel: 8, engineTemp: 74, nextServiceInHours: 0, activeAlerts: ["Falla en sensor de embrague", "Mantenimiento correctivo requerido"] },
-    specs: { transmission: "Dyna-6 24x24", fuelTank: 400, weight: 7800, tractionType: "4WD" },
+    id: "mac-60", providerId: "prov-4", brand: "Massey Ferguson", model: "MF 8470", year: 2022,
+    horsepower: 270, implement: "Cargador frontal", district: "Salaverry",
+    pricePerDay: 2020, pricePerHectare: 280, status: "operativo",
+    imageUrl: REAL_PHOTO.mfLarge, rating: 4.7, totalJobs: 121,
+    telemetry: { hourmeter: 1830, fuelLevel: 74, engineTemp: 87, nextServiceInHours: 120, activeAlerts: [] },
+    specs: { transmission: "Dyna-VT CVT", fuelTank: 480, weight: 8900, tractionType: "4WD" },
   },
   {
-    id: "mac-8", providerId: "prov-4", brand: "Kubota", model: "M5-111", year: 2023,
-    horsepower: 111, implement: "Cisterna", district: "Salaverry",
-    pricePerDay: 780, pricePerHectare: 160, status: "operativo",
-    imageUrl: BRAND_IMG["Kubota"], rating: 4.7, totalJobs: 64,
+    id: "mac-61", providerId: "prov-4", brand: "Kubota", model: "M8200", year: 2023,
+    horsepower: 82, implement: "Cisterna", district: "Salaverry",
+    pricePerDay: 600, pricePerHectare: 130, status: "operativo",
+    imageUrl: REAL_PHOTO.kubMid, rating: 4.7, totalJobs: 64,
     telemetry: { hourmeter: 980, fuelLevel: 84, engineTemp: 82, nextServiceInHours: 170, activeAlerts: [] },
-    specs: { transmission: "36x36 Hi-Lo", fuelTank: 175, weight: 4200, tractionType: "4WD" },
+    specs: { transmission: "Glide Shift 8x8", fuelTank: 155, weight: 4300, tractionType: "4WD" },
   },
 
   // ==========================================================================

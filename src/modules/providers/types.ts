@@ -1,11 +1,11 @@
 // ============================================================================
-// Dominio: Proveedores (ficha comercial TractorLink)
+// Dominio: Proveedores (ficha comercial TraktorRent)
 // ============================================================================
 import type { District } from "../../core/constants/districts";
 
 export interface Provider {
   id: string;
-  companyName: string;      // marca comercial TractorLink
+  companyName: string;      // razón social del proveedor en TraktorRent
   ruc: string;
   verified: boolean;
   district: District;

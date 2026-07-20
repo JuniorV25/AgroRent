@@ -2,7 +2,6 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { fileURLToPath, URL } from "node:url";
 
-// Alias que reflejan la Screaming Architecture del proyecto:
 // @modules agrupa los dominios de negocio (machinery, rentals, users, providers, fields...),
 // @core la infraestructura transversal (Supabase, UI kit, utils), @app el shell de la SPA.
 export default defineConfig({

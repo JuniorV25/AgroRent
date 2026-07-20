@@ -58,6 +58,15 @@ interface AppState {
   loginDemo: (role: Role) => void; // acceso rápido con las cuentas demo del README
   logout: () => void;
   updateUser: (id: string, patch: Partial<User>) => void;
+  // Edición validada de los datos de la cuenta (nombre, correo, teléfono y,
+  // según el tipo de cuenta, razón social/RUC o DNI). Reutiliza las mismas
+  // reglas de formato que el registro y bloquea correos duplicados.
+  updateProfile: (id: string, patch: {
+    name?: string; email?: string; phone?: string; company?: string; ruc?: string; dni?: string;
+  }) => { ok: boolean; error?: string };
+  // Cambio de contraseña — exige la contraseña actual correcta antes de aceptar
+  // la nueva, para los 4 perfiles de cuenta (cliente/proveedor · individual/empresa).
+  changePassword: (id: string, currentPassword: string, newPassword: string) => { ok: boolean; error?: string };
 
   // --- Recuperación de contraseña (código simulado, sin servidor de correo) ---
   passwordResets: Record<string, PasswordReset>;
@@ -66,6 +75,7 @@ interface AppState {
 
   // --- Proveedores (ficha comercial, crece con cada registro) ---
   providers: Provider[];
+  updateProvider: (id: string, patch: Partial<Provider>) => void;
 
   // --- Flota (Proveedor) ---
   machines: Machine[];
@@ -189,6 +199,69 @@ export const useStore = create<AppState>()(
           user: s.user && s.user.id === id ? { ...s.user, ...patch } : s.user,
         })),
 
+      updateProfile: (id, patch) => {
+        const current = get().users.find((u) => u.id === id);
+        if (!current) return { ok: false, error: "Usuario no encontrado." };
+
+        if (patch.name !== undefined) {
+          const check = validateFullName(patch.name);
+          if (!check.ok) return { ok: false, error: check.error };
+        }
+        let normalizedEmail: string | undefined;
+        if (patch.email !== undefined) {
+          normalizedEmail = patch.email.trim().toLowerCase();
+          const check = validateEmail(normalizedEmail);
+          if (!check.ok) return { ok: false, error: check.error };
+          if (get().users.some((u) => u.id !== id && u.email.toLowerCase() === normalizedEmail)) {
+            return { ok: false, error: "Ya existe otra cuenta con ese correo." };
+          }
+        }
+        if (patch.phone !== undefined) {
+          const check = validatePhone(patch.phone);
+          if (!check.ok) return { ok: false, error: check.error };
+        }
+        if (patch.company !== undefined) {
+          const check = validateCompanyName(patch.company);
+          if (!check.ok) return { ok: false, error: check.error };
+        }
+        if (patch.ruc !== undefined) {
+          const check = validateRuc(patch.ruc);
+          if (!check.ok) return { ok: false, error: check.error };
+        }
+        if (patch.dni !== undefined) {
+          const check = validateDni(patch.dni);
+          if (!check.ok) return { ok: false, error: check.error };
+        }
+
+        const cleanPatch: Partial<User> = {
+          ...(patch.name !== undefined ? { name: patch.name.trim() } : {}),
+          ...(normalizedEmail !== undefined ? { email: normalizedEmail } : {}),
+          ...(patch.phone !== undefined ? { phone: patch.phone.trim() } : {}),
+          ...(patch.company !== undefined ? { company: patch.company.trim() } : {}),
+          ...(patch.ruc !== undefined ? { ruc: patch.ruc.trim() } : {}),
+          ...(patch.dni !== undefined ? { dni: patch.dni.trim() } : {}),
+        };
+        set((s) => ({
+          users: s.users.map((u) => (u.id === id ? { ...u, ...cleanPatch } : u)),
+          user: s.user && s.user.id === id ? { ...s.user, ...cleanPatch } : s.user,
+        }));
+        return { ok: true };
+      },
+
+      changePassword: (id, currentPassword, newPassword) => {
+        const user = get().users.find((u) => u.id === id);
+        if (!user) return { ok: false, error: "Usuario no encontrado." };
+        if (user.password !== currentPassword) return { ok: false, error: "La contraseña actual no es correcta." };
+        const passCheck = validatePassword(newPassword);
+        if (!passCheck.ok) return { ok: false, error: passCheck.error };
+        if (newPassword === currentPassword) return { ok: false, error: "La nueva contraseña debe ser distinta a la actual." };
+        set((s) => ({
+          users: s.users.map((u) => (u.id === id ? { ...u, password: newPassword } : u)),
+          user: s.user && s.user.id === id ? { ...s.user, password: newPassword } : s.user,
+        }));
+        return { ok: true };
+      },
+
       passwordResets: {},
       requestPasswordReset: (email) => {
         const normalized = email.trim().toLowerCase();
@@ -220,6 +293,8 @@ export const useStore = create<AppState>()(
       },
 
       providers: seedProviders,
+      updateProvider: (id, patch) =>
+        set((s) => ({ providers: s.providers.map((p) => (p.id === id ? { ...p, ...patch } : p)) })),
 
       machines: seedMachines,
       addMachine: (m) => set((s) => ({ machines: [m, ...s.machines] })),
@@ -344,6 +419,37 @@ export const useStore = create<AppState>()(
       name: "agrorent-store-v6",
       storage: createJSONStorage(() => localStorage),
       // Persistimos todo el dominio para simular backend real.
+
+      // v1 (dentro de la clave v6): se retiraron del catálogo semilla las 8
+      // unidades de prueba sin foto real (mac-1..mac-8) y sus providers
+      // huérfanos (prov-1/2/3). `migrate` limpia esos IDs también de lo que
+      // ya esté guardado en el navegador de cada usuario, SIN reiniciar el
+      // resto del estado: perfiles editados, fotos subidas, campos, reservas
+      // y chats quedan intactos tal como los dejó cada cuenta demo.
+      version: 1,
+      migrate: (persistedState) => {
+        const state = persistedState as Partial<AppState> | undefined;
+        if (!state) return state;
+
+        const REMOVED_MACHINE_IDS = new Set(["mac-1", "mac-2", "mac-3", "mac-4", "mac-5", "mac-6", "mac-7", "mac-8"]);
+        const REMOVED_PROVIDER_IDS = new Set(["prov-1", "prov-2", "prov-3"]);
+
+        if (Array.isArray(state.machines)) {
+          state.machines = state.machines.filter((m) => !REMOVED_MACHINE_IDS.has(m.id));
+          // Si el navegador ya tenía el store viejo, prov-4 (cuenta demo del
+          // proveedor) se quedaría sin flota: le damos su reemplazo con fotos reales.
+          if (!state.machines.some((m) => m.providerId === "prov-4")) {
+            state.machines = [...seedMachines.filter((m) => m.providerId === "prov-4"), ...state.machines];
+          }
+        }
+        if (Array.isArray(state.providers)) {
+          state.providers = state.providers.filter((p) => !REMOVED_PROVIDER_IDS.has(p.id));
+          if (!state.providers.some((p) => p.id === "prov-4")) {
+            state.providers = [...state.providers, ...seedProviders.filter((p) => p.id === "prov-4")];
+          }
+        }
+        return state;
+      },
     }
   )
 );

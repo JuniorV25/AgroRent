@@ -10,14 +10,13 @@ import type { ReservationStatus } from "../../rentals/types";
 import type { Field as FarmField } from "../../fields/types";
 import { BRANDS, IMPLEMENTS, BRAND_IMG } from "../../machinery/data";
 import { rateBracketForHp, implementRate } from "../../machinery/pricing";
-import { DISTRICTS } from "../../../core/constants/districts";
 import { monthlyMetrics } from "../../metrics/data";
 import { statusMeta } from "../../machinery/status";
 import { reservationStatusMeta } from "../../rentals/status";
 import { soles, uid } from "../../../core/utils/format";
 import { closestMatch, isTypoOf } from "../../../core/utils/fuzzyMatch";
 import DashboardShell, { NavItem } from "../layout/DashboardShell";
-import { Card, Button, Badge, Field, inputCls, SectionWatermark } from "../../../core/ui";
+import { Card, Button, Badge, Field, inputCls, SectionWatermark, DistrictOptions } from "../../../core/ui";
 import MachineCard from "../../machinery/components/MachineCard";
 import TelemetryPanel from "../../machinery/components/TelemetryPanel";
 import ChatWidget from "../../rentals/components/ChatWidget";
@@ -68,7 +67,7 @@ function Resumen({ fleet, onGo }: { fleet: Machine[]; onGo: (t: string) => void 
     <div className="relative">
       <SectionWatermark tone="earth" />
       <div className="stagger space-y-6 relative z-10">
-        <Header title="Panel del Proveedor" sub={`TractorLink · ${company}`} />
+        <Header title="Panel del Proveedor" sub={`TraktorRent · ${company}`} />
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <Stat k={String(fleet.length)} v="Unidades en flota" tone="earth" />
           <Stat k={String(operativos)} v="Operativas" tone="agua" />
@@ -375,7 +374,7 @@ function MachineFormModal({ open, onClose, machine }: { open: boolean; onClose: 
             <div className="grid grid-cols-2 gap-3">
               <Field label="Distrito">
                 <select className={inputCls} value={form.district} onChange={(e) => set("district", e.target.value)}>
-                  {DISTRICTS.map((d) => <option key={d}>{d}</option>)}
+                  <DistrictOptions />
                 </select>
               </Field>
               {isEdit && (

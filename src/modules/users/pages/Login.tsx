@@ -8,8 +8,7 @@ import {
 import { useStore } from "../../../store/useStore";
 import type { Role, AccountType } from "../types";
 import type { District } from "../../../core/constants/districts";
-import { DISTRICTS } from "../../../core/constants/districts";
-import { Button, Field, FieldError, PasswordInput, inputCls, inputErrorCls, Logo } from "../../../core/ui";
+import { Button, Field, FieldError, PasswordInput, inputCls, inputErrorCls, Logo, DistrictOptions } from "../../../core/ui";
 import { cx } from "../../../core/utils/format";
 import {
   validateEmail,
@@ -170,16 +169,27 @@ export default function Login() {
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
       {/* Panel de marca — solo desktop, da contexto y confianza junto al formulario */}
-      <div className="hidden lg:flex relative overflow-hidden flex-col justify-between p-12 bg-gradient-to-br from-agua-600 via-agua-500 to-[#0b7c72]">
-        <div className="pointer-events-none absolute -top-24 -right-20 w-96 h-96 rounded-full bg-white/10 blur-3xl" />
-        <div className="pointer-events-none absolute bottom-0 -left-16 w-72 h-72 rounded-full bg-earth-300/20 blur-3xl" />
-        <Leaf size={26} className="pointer-events-none absolute top-28 left-[12%] text-white/25 animate-float-slow" />
-        <Leaf size={20} className="pointer-events-none absolute bottom-40 right-[14%] text-white/20 animate-float-slow" style={{ animationDelay: "1.2s" }} />
+      <div className="hidden lg:flex relative overflow-hidden flex-col justify-between p-12">
+        {/* Foto real de fondo (campo agrícola) + degradado de marca para legibilidad */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src="https://images.unsplash.com/photo-1717702576954-c07131c54169?auto=format&fit=crop&w=1400&q=80"
+            alt="Campo agrícola con maquinaria trabajando"
+            className="absolute inset-0 h-full w-full object-cover"
+            loading="eager"
+            decoding="async"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-agua-700/93 via-agua-600/90 to-[#0b7c72]/95" />
+        </div>
+        <div className="pointer-events-none absolute -top-24 -right-20 w-96 h-96 rounded-full bg-white/10 blur-3xl z-10" />
+        <div className="pointer-events-none absolute bottom-0 -left-16 w-72 h-72 rounded-full bg-earth-300/20 blur-3xl z-10" />
+        <Leaf size={26} className="z-10 pointer-events-none absolute top-28 left-[12%] text-white/25 animate-float-slow" />
+        <Leaf size={20} className="z-10 pointer-events-none absolute bottom-40 right-[14%] text-white/20 animate-float-slow" style={{ animationDelay: "1.2s" }} />
 
         <Link to="/" className="relative z-10 flex items-center gap-2.5 w-fit">
           <Logo />
           <p className="font-display font-extrabold text-white tracking-tight text-lg">
-            Agro<span className="text-earth-100">Rent</span>
+            Traktor<span className="text-earth-100">Rent</span>
           </p>
         </Link>
 
@@ -197,7 +207,7 @@ export default function Login() {
               { icon: <ShieldCheck size={16} />, text: "Empresa verificada" },
               { icon: <BadgeCheck size={16} />, text: "RUC validado por SUNAT" },
               { icon: <Sparkles size={16} />, text: "Telemetría en tiempo real" },
-              { icon: <MapPin size={16} />, text: "Cobertura en 4 distritos de La Libertad" },
+              { icon: <MapPin size={16} />, text: "Cobertura en La Libertad y Lambayeque" },
             ].map((b) => (
               <div key={b.text} className="flex items-center gap-2.5 text-sm font-semibold text-white">
                 <span className="w-7 h-7 rounded-full grid place-items-center bg-white/15">{b.icon}</span>
@@ -251,9 +261,9 @@ export default function Login() {
               {/* Selector de rol — rutas mutuamente excluyentes */}
               <div className="mt-5 grid grid-cols-2 gap-3">
                 <RoleTile active={role === "cliente"} onClick={() => setRole("cliente")}
-                  icon={<Search size={20} />} title="Cliente" sub="AgroRent · busco maquinaria" tone="agua" />
+                  icon={<Search size={20} />} title="Cliente" sub="Busco maquinaria" tone="agua" />
                 <RoleTile active={role === "proveedor"} onClick={() => setRole("proveedor")}
-                  icon={<Tractor size={20} />} title="Proveedor" sub="TractorLink · ofrezco flota" tone="earth" />
+                  icon={<Tractor size={20} />} title="Proveedor" sub="Ofrezco mi flota" tone="earth" />
               </div>
 
               {/* Subtipo de cuenta — solo en registro, cambia los datos pedidos */}
@@ -333,7 +343,7 @@ export default function Login() {
                     {role === "proveedor" && (
                       <Field label="Distrito de operación">
                         <select className={inputCls} value={district} onChange={(e) => setDistrict(e.target.value as District)}>
-                          {DISTRICTS.map((d) => <option key={d}>{d}</option>)}
+                          <DistrictOptions />
                         </select>
                       </Field>
                     )}

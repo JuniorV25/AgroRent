@@ -47,7 +47,7 @@ export default function DashboardShell({
               <Tractor size={18} />
             </div>
             <div className="leading-none flex-1 min-w-0">
-              <p className="font-display font-extrabold text-slate-800 text-sm">{accent === "agua" ? "AgroRent" : "TractorLink"}</p>
+              <p className="font-display font-extrabold text-slate-800 text-sm">TraktorRent</p>
               <p className="text-[10px] text-slate-400 font-semibold">{accent === "agua" ? "PANEL CLIENTE" : "PANEL PROVEEDOR"}</p>
             </div>
           </div>

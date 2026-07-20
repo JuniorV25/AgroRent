@@ -4,6 +4,30 @@
 import React, { useState } from "react";
 import { Eye, EyeOff, Tractor } from "lucide-react";
 import { cx } from "../utils/format";
+import { REGIONS, districtsByRegion, type Region } from "../constants/districts";
+
+// ---------- DistrictOptions — <option>/<optgroup> agrupados por región/provincia ----------
+// Se usa dentro de cualquier <select> de distrito (registro, campos, catálogo de
+// maquinaria, filtros de búsqueda). Si se pasa `region`, solo muestra los
+// distritos de esa región; si no, agrupa por las 2 regiones (La Libertad / Lambayeque).
+export function DistrictOptions({ region }: { region?: Region }) {
+  const regions = region ? [region] : REGIONS;
+  return (
+    <>
+      {regions.map((r) => (
+        <optgroup key={r} label={r}>
+          {districtsByRegion(r).flatMap(({ province, districts }) =>
+            districts.map((d) => (
+              <option key={d} value={d}>
+                {d} · {province}
+              </option>
+            ))
+          )}
+        </optgroup>
+      ))}
+    </>
+  );
+}
 
 // ---------- Button ----------
 type BtnProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -201,42 +225,53 @@ export function PasswordInput({
   );
 }
 
-// ---------- Logo — insignia circular con gradiente + acento de hoja ----------
+// ---------- Logo — insignia TraktorRent: tractor + arco de "flota en alquiler" ----------
 export function Logo({ size = 38 }: { size?: number }) {
   return (
-    <div className="relative shrink-0" style={{ width: size, height: size }}>
-      <svg viewBox="0 0 40 40" width={size} height={size} className="drop-shadow-[0_6px_16px_rgba(13,148,136,0.4)]">
-        <defs>
-          <linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#2bbfae" />
-            <stop offset="100%" stopColor="#0b7c72" />
-          </linearGradient>
-        </defs>
-        <circle cx="20" cy="20" r="20" fill="url(#logoGrad)" />
-        <g fill="#fff">
-          <rect x="15" y="15" width="14" height="8.5" rx="2.4" />
-          <rect x="17.5" y="10" width="7.5" height="6" rx="1.8" opacity="0.9" />
-          <circle cx="14.5" cy="27" r="6" />
-          <circle cx="14.5" cy="27" r="2.4" fill="#0b7c72" />
-          <circle cx="27" cy="28" r="4.2" />
-          <circle cx="27" cy="28" r="1.7" fill="#0b7c72" />
-        </g>
-      </svg>
-      <svg viewBox="0 0 20 20" width={size * 0.44} height={size * 0.44} className="absolute -top-1.5 -right-1.5">
-        <circle cx="10" cy="10" r="10" fill="#c19a5b" />
-        <path d="M10 4c3 2 4 5 2 8-2 2-5 2-6-1-1-3 1-6 4-7z" fill="#faf7f2" />
-      </svg>
-    </div>
+    <svg
+      viewBox="0 0 40 40"
+      width={size}
+      height={size}
+      className="shrink-0 drop-shadow-[0_6px_16px_rgba(13,148,136,0.4)]"
+      role="img"
+      aria-label="TraktorRent"
+    >
+      <defs>
+        <linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#2bbfae" />
+          <stop offset="100%" stopColor="#0b7c72" />
+        </linearGradient>
+      </defs>
+      {/* Insignia — esquinas redondeadas, sin borde ni fondo blanco */}
+      <rect width="40" height="40" rx="11" fill="url(#logoGrad)" />
+
+      {/* Arco doble de "flota en movimiento / alquiler circular" */}
+      <path d="M7.5 14.2A13.4 13.4 0 0 1 29.6 9.6" fill="none" stroke="#eafffb" strokeWidth="2.3" strokeLinecap="round" opacity="0.9" />
+      <path d="M28.3 7.6l2.9 1.6-.8 3.2" fill="none" stroke="#eafffb" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" opacity="0.9" />
+      <path d="M32.5 25.8A13.4 13.4 0 0 1 10.4 30.4" fill="none" stroke="#d9a54a" strokeWidth="2.3" strokeLinecap="round" />
+      <path d="M11.7 32.4l-2.9-1.6.8-3.2" fill="none" stroke="#d9a54a" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" />
+
+      {/* Tractor */}
+      <g fill="#fff">
+        <rect x="14.3" y="16.6" width="12.6" height="7.2" rx="2" />
+        <rect x="16.3" y="12" width="7.2" height="5.4" rx="1.6" opacity="0.94" />
+        <rect x="17.4" y="13" width="5" height="3" rx="0.8" fill="#0b7c72" opacity="0.55" />
+        <circle cx="13.8" cy="27.6" r="5" />
+        <circle cx="25.6" cy="28.3" r="3.6" />
+      </g>
+      <circle cx="13.8" cy="27.6" r="2" fill="#0b7c72" />
+      <circle cx="25.6" cy="28.3" r="1.4" fill="#0b7c72" />
+    </svg>
   );
 }
 
 // ---------- Modal (glassmorphism) ----------
-export function Modal({ open, onClose, children, title }: { open: boolean; onClose: () => void; children: React.ReactNode; title?: string }) {
+export function Modal({ open, onClose, children, title, size = "lg" }: { open: boolean; onClose: () => void; children: React.ReactNode; title?: string; size?: "lg" | "xl" }) {
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-[fadeInUp_.3s_ease]" onClick={onClose} />
-      <div className="glass relative w-full max-w-lg rounded-2xl shadow-float p-6 animate-fade-in-up">
+      <div className={cx("glass relative w-full rounded-2xl shadow-float p-6 animate-fade-in-up", size === "xl" ? "max-w-xl" : "max-w-lg")}>
         {title && <h3 className="font-display font-bold text-xl text-slate-800 mb-4">{title}</h3>}
         {children}
       </div>

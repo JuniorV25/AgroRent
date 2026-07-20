@@ -1,10 +1,10 @@
 <div align="center">
 
-# 🚜 AgroRent · TractorLink
+# 🚜 TraktorRent
 
 ### Marketplace B2B de alquiler de maquinaria agrícola
 
-*Conectando fundos y agroexportadoras con proveedores verificados de tractores e implementos en La Libertad, Perú.*
+*Conectando fundos y agroexportadoras con proveedores verificados de tractores e implementos en La Libertad y Lambayeque, Perú.*
 
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
@@ -41,12 +41,12 @@
 
 ## 🌱 Descripción general
 
-**AgroRent · TractorLink** es una plataforma web B2B que centraliza la relación entre dos roles:
+**TraktorRent** es una plataforma web B2B que centraliza la relación entre dos roles:
 
-| Rol | Marca comercial | Qué hace |
-|-----|-----------------|----------|
-| **Cliente** | AgroRent | Registra sus campos (fundos), busca maquinaria con filtros avanzados y simula costos de alquiler por día/hectárea. |
-| **Proveedor** | TractorLink | Publica y gestiona su flota, monitorea telemetría simulada y recibe alertas de mantenimiento preventivo. |
+| Rol | Qué hace |
+|-----|----------|
+| **Cliente** | Registra sus campos (fundos), busca maquinaria con filtros avanzados y simula costos de alquiler por día/hectárea. |
+| **Proveedor** | Publica y gestiona su flota, monitorea telemetría simulada y recibe alertas de mantenimiento preventivo. |
 
 En esta entrega, **toda la lógica de datos está simulada en el frontend** (estado global + `localStorage`), lo que permite ejecutar la aplicación sin backend. Este README documenta también **cómo conectarla a una base de datos real** cuando quieras llevarla a producción.
 
@@ -119,7 +119,7 @@ agrorent/
     ├── modules/                 # Dominios de negocio (Screaming Architecture)
     │   ├── machinery/           # Maquinaria / flota — types, status, data, MachineCard, TelemetryPanel
     │   ├── rentals/             # Alquileres — reservas, contrato digital, chat B2B
-    │   ├── providers/           # Proveedores (ficha comercial TractorLink)
+    │   ├── providers/           # Proveedores (ficha comercial)
     │   ├── users/               # Usuarios / clientes — auth, Login
     │   ├── fields/               # Campos del cliente (fundos)
     │   ├── notifications/       # Notificaciones in-app
@@ -371,7 +371,7 @@ Distribuido bajo licencia **MIT**. Uso libre para fines educativos y comerciales
 
 **Desarrollado por Junior Vergara López**
 
-*AgroRent · TractorLink — Prototipo B2B para el agro peruano*
-Moche · Virú · Laredo · Salaverry
+*TraktorRent — Prototipo B2B para el agro peruano*
+La Libertad, Lambayeque
 
 </div>
